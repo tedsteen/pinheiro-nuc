@@ -1,0 +1,48 @@
+services:
+  traefik:
+    image: 'traefik:latest'
+    restart: unless-stopped
+    command:
+      #- "--log.level=DEBUG"
+      - '--api.insecure=true'
+
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+
+      - '--entrypoints.web.address=:80'
+    environment:
+      TZ: Europe/Lisbon
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.infra_traefik.rule=Host(`traefik.pinheiro.s3n.io`)'
+      - 'traefik.http.routers.infra_traefik.entrypoints=web'
+      - 'traefik.http.services.infra_traefik.loadbalancer.server.port=8080'
+      - 'traefik.docker.network=traefik'
+    ports:
+      - '80:80'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    networks:
+      - traefik
+
+  portainer:
+    image: portainer/portainer-ce:alpine
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - ${CONFIG_PATH}/portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.infra_portainer.rule=Host(`portainer.pinheiro.s3n.io`)'
+      - 'traefik.http.routers.infra_portainer.entrypoints=web'
+      - 'traefik.http.services.infra_portainer.loadbalancer.server.port=9000'
+      - 'traefik.docker.network=traefik'
+    environment:
+      TZ: Europe/Lisbon
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    driver: bridge
