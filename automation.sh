@@ -9,8 +9,11 @@ case "$CMD" in
     down)
         docker-compose -f automation/docker-compose.yaml down
         ;;
+    restart)
+        docker-compose -f automation/docker-compose.yaml restart
+        ;;
     *)
-        echo "Usage: $0 up|down"
+        echo "Usage: $0 up|down|restart"
         exit 1
         ;;
 esac
