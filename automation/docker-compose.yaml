@@ -8,6 +8,7 @@ services:
       timeout: 10s
       retries: 10
     environment:
+      TZ: Europe/Lisbon
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb2-admin-username
       DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb2-admin-password
