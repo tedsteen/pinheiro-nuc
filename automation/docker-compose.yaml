@@ -48,7 +48,7 @@ services:
       GUID: 1001
       TZ: Europe/Lisbon
     networks:
-      - default
+      - default #Needed to reach influxdb and other containers on the default network
       - infra_traefik
     volumes:
       - ${CONFIG_PATH}/hass:/config
