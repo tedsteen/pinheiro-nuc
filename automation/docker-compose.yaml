@@ -47,6 +47,7 @@ services:
       GUID: 1001
       TZ: Europe/Lisbon
     networks:
+      - default
       - infra_traefik
     volumes:
       - ${CONFIG_PATH}/hass:/config
