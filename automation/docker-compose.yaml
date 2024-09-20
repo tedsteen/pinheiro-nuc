@@ -10,9 +10,9 @@ services:
     environment:
       TZ: Europe/Lisbon
       DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb2-admin-username
-      DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb2-admin-password
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE: /run/secrets/influxdb2-admin-token
+      DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb-admin-username
+      DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb-admin-password
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE: /run/secrets/influxdb-admin-token
       DOCKER_INFLUXDB_INIT_ORG: pinheiro 
       DOCKER_INFLUXDB_INIT_BUCKET: automation
     labels:
@@ -25,12 +25,12 @@ services:
       - default
       - infra_traefik
     secrets:
-      - influxdb2-admin-username
-      - influxdb2-admin-password
-      - influxdb2-admin-token
+      - influxdb-admin-username
+      - influxdb-admin-password
+      - influxdb-admin-token
     volumes:
-      - ${CONFIG_PATH}/influxdb/data:/var/lib/influxdb2
-      - ${CONFIG_PATH}/influxdb/config:/etc/influxdb2
+      - ${CONFIG_PATH}/influxdb/data:/var/lib/influxdb
+      - ${CONFIG_PATH}/influxdb/config:/etc/influxdb
 
   home-assistant:
     image: homeassistant/home-assistant:latest
@@ -82,12 +82,12 @@ services:
       - ${CONFIG_PATH}/node-red:/data
 
 secrets:
-  influxdb2-admin-username:
-    file: ${CONFIG_PATH}/influxdb2/secrets/.env.influxdb2-admin-username
-  influxdb2-admin-password:
-    file: ${CONFIG_PATH}/influxdb2/secrets/.env.influxdb2-admin-password
-  influxdb2-admin-token:
-    file: ${CONFIG_PATH}/influxdb2/secrets/.env.influxdb2-admin-token
+  influxdb-admin-username:
+    file: ${CONFIG_PATH}/influxdb/secrets/.env.influxdb-admin-username
+  influxdb-admin-password:
+    file: ${CONFIG_PATH}/influxdb/secrets/.env.influxdb-admin-password
+  influxdb-admin-token:
+    file: ${CONFIG_PATH}/influxdb/secrets/.env.influxdb-admin-token
 
 networks:
   infra_traefik:
