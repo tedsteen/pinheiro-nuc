@@ -14,6 +14,7 @@ case "$CMD" in
         ;;
     *)
         echo "Usage: $0 up|down|restart"
+        exit 1
         ;;
 esac
 
