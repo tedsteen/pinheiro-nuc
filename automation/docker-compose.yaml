@@ -22,7 +22,7 @@ services:
       - 'traefik.http.services.automation_influxdb.loadbalancer.server.port=8086'
       - 'traefik.docker.network=infra_traefik'
     networks:
-      - default
+      - metrics
       - infra_traefik
     secrets:
       - influxdb-admin-username
@@ -31,6 +31,29 @@ services:
     volumes:
       - ${CONFIG_PATH}/influxdb/data:/var/lib/influxdb
       - ${CONFIG_PATH}/influxdb/config:/etc/influxdb
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    environment:
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.automation_grafana.rule=Host(`grafana.pinheiro.s3n.io`)'
+      - 'traefik.http.routers.automation_grafana.entrypoints=web'
+      - 'traefik.http.services.automation_grafana.loadbalancer.server.port=3000'
+      - 'traefik.docker.network=infra_traefik'
+    networks:
+      - metrics
+      - infra_traefik
+    volumes:
+      - ${CONFIG_PATH}/grafana:/var/lib/grafana
 
   home-assistant:
     image: homeassistant/home-assistant:latest
@@ -57,7 +80,7 @@ services:
       GUID: 1001
       TZ: Europe/Lisbon
     networks:
-      - default #Needed to reach influxdb and other containers on the default network
+      - metrics
       - infra_traefik
     volumes:
       - ${CONFIG_PATH}/hass:/config
@@ -92,3 +115,5 @@ secrets:
 networks:
   infra_traefik:
     external: true
+  metrics:
+    driver: bridge
