@@ -43,6 +43,72 @@ services:
     networks:
       - traefik
 
+  influxdb:
+    image: influxdb:alpine
+    restart: unless-stopped
+    healthcheck:
+      test: "curl -f http://localhost:8086/ping"
+      interval: 2s
+      timeout: 10s
+      retries: 10
+    environment:
+      TZ: Europe/Lisbon
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME_FILE: /run/secrets/influxdb-admin-username
+      DOCKER_INFLUXDB_INIT_PASSWORD_FILE: /run/secrets/influxdb-admin-password
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN_FILE: /run/secrets/influxdb-admin-token
+      DOCKER_INFLUXDB_INIT_ORG: pinheiro 
+      DOCKER_INFLUXDB_INIT_BUCKET: everything
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.infra_influxdb.rule=Host(`influxdb.pinheiro.s3n.io`)'
+      - 'traefik.http.routers.infra_influxdb.entrypoints=web'
+      - 'traefik.http.services.infra_influxdb.loadbalancer.server.port=8086'
+      - 'traefik.docker.network=infra_traefik'
+    networks:
+      - metrics
+      - traefik
+    secrets:
+      - influxdb-admin-username
+      - influxdb-admin-password
+      - influxdb-admin-token
+    volumes:
+      - ${CONFIG_PATH}/influxdb/data:/var/lib/influxdb
+      - ${CONFIG_PATH}/influxdb/config:/etc/influxdb
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    environment:
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.infra_grafana.rule=Host(`grafana.pinheiro.s3n.io`)'
+      - 'traefik.http.routers.infra_grafana.entrypoints=web'
+      - 'traefik.http.services.infra_grafana.loadbalancer.server.port=3000'
+      - 'traefik.docker.network=infra_traefik'
+    networks:
+      - metrics
+      - traefik
+    volumes:
+      - ${CONFIG_PATH}/grafana:/var/lib/grafana
+
+secrets:
+  influxdb-admin-username:
+    file: ${CONFIG_PATH}/influxdb/secrets/.env.influxdb-admin-username
+  influxdb-admin-password:
+    file: ${CONFIG_PATH}/influxdb/secrets/.env.influxdb-admin-password
+  influxdb-admin-token:
+    file: ${CONFIG_PATH}/influxdb/secrets/.env.influxdb-admin-token
+
 networks:
   traefik:
+    driver: bridge
+  metrics:
     driver: bridge
