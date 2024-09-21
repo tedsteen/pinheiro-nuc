@@ -99,6 +99,22 @@ services:
     volumes:
       - ${CONFIG_PATH}/grafana:/var/lib/grafana
 
+  telegraf:
+    build: ./telegraf
+    restart: unless-stopped
+    # privileged: true
+    environment:
+      TZ: Europe/Lisbon
+      HOST_MOUNT_PREFIX: /hostfs
+      HOST_PROC: /hostfs/proc
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /:/hostfs:ro
+    networks:
+      - metrics
+    secrets:
+      - influxdb-admin-token
+
 secrets:
   influxdb-admin-username:
     file: ${CONFIG_PATH}/influxdb/secrets/.env.influxdb-admin-username
