@@ -64,7 +64,7 @@ services:
       - 'traefik.http.routers.infra_influxdb.rule=Host(`influxdb.pinheiro.s3n.io`)'
       - 'traefik.http.routers.infra_influxdb.entrypoints=web'
       - 'traefik.http.services.infra_influxdb.loadbalancer.server.port=8086'
-      - 'traefik.docker.network=infra_traefik'
+      - 'traefik.docker.network=traefik'
     networks:
       - metrics
       - traefik
@@ -92,7 +92,7 @@ services:
       - 'traefik.http.routers.infra_grafana.rule=Host(`grafana.pinheiro.s3n.io`)'
       - 'traefik.http.routers.infra_grafana.entrypoints=web'
       - 'traefik.http.services.infra_grafana.loadbalancer.server.port=3000'
-      - 'traefik.docker.network=infra_traefik'
+      - 'traefik.docker.network=traefik'
     networks:
       - metrics
       - traefik
@@ -102,7 +102,6 @@ services:
   telegraf:
     build: ./telegraf
     restart: unless-stopped
-    # privileged: true
     environment:
       TZ: Europe/Lisbon
       HOST_MOUNT_PREFIX: /hostfs
