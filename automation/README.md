@@ -28,3 +28,4 @@
 * Install these palettes
     * https://flows.nodered.org/node/node-red-contrib-home-assistant-websocket
         * Follow [this guide](https://zachowj.github.io/node-red-contrib-home-assistant-websocket/guide/#configuration) to connect Node Red with HASS
+            * Home assistant base URL: `http://home-assistant:8123`

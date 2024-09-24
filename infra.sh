@@ -1,6 +1,7 @@
 #!/bin/bash
 CMD=$1
-export CONFIG_PATH=${2:-/var/lib/fast/config/infra}
+ROOT_PATH=${2:-$(pwd)/config}
+export CONFIG_PATH=$ROOT_PATH/infra
 case "$CMD" in
     up)
         docker-compose -f infra/docker-compose.yaml pull
