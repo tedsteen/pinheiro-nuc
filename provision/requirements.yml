@@ -1,0 +1,7 @@
+---
+roles:
+  - name: "hifis.toolkit.unattended_upgrades"
+    src: "https://github.com/hifis-net/ansible-role-unattended-upgrades"
+  
+  - name: "geerlingguy.docker"
+    src: "https://github.com/geerlingguy/ansible-role-docker"

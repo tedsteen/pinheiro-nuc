@@ -1,0 +1,109 @@
+---
+- name: Base provisioning (security, mounts, users and dependencies)
+  hosts: all
+  become: yes
+  tasks:
+# SECURE THE HOST
+    - name: Update apt repo and cache
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+    - name: Upgrade all packages
+      apt: upgrade=dist force_apt_get=yes
+
+    - name: Check if a reboot is needed
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required_file
+
+    - name: Reboot the box if kernel updated
+      reboot:
+        msg: "Reboot initiated by Ansible for kernel updates"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required_file.stat.exists
+
+    - name: Secure shared memory
+      mount:
+        src: none
+        path: /run/shm
+        fstype: tmpfs
+        opts: defaults,ro
+        state: mounted
+
+    - import_role:
+        name: hifis.toolkit.unattended_upgrades
+      vars:
+        unattended_remove_unused_dependencies: true
+        unattended_automatic_reboot: true
+        unattended_automatic_reboot_time: "02:00"
+        # unattended_mail: 'root@example.com'
+
+#    - import_role:
+#        name: devsec.hardening.ssh_hardening
+  
+#    - import_role:
+#        name: devsec.hardening.os_hardening
+#      vars:
+#        sysctl_overwrite:
+#          # Enable IPv4 traffic forwarding. (for docker)
+#          net.ipv4.ip_forward: 1
+    
+    - name: Install fail2ban
+      apt:
+        name: fail2ban
+        state: present
+    - name: Add fail2ban sshd configuration
+      ini_file:
+        path: /etc/fail2ban/jail.d/ssh.conf
+        section: "sshd"
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+      with_items:
+        - { option: "enabled", value: "true" }
+        - { option: "banaction", value: "iptables" }
+        - { option: "port", value: "22" }
+        - { option: "filter", value: "sshd" }
+        - { option: "logpath", value: "%(sshd_log)s" }
+        - { option: "maxretry", value: "5" }
+    - name: Restart fail2ban
+      service:
+        name: fail2ban
+        state: restarted
+
+# CREATE USER
+    - name: Create user "deploy"
+      user:
+        name: deploy
+        shell: /bin/bash
+    - name: Set authorized key for deploy
+      authorized_key:
+        user: deploy
+        state: present
+        key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJO3Qx7sM0ghSkVo/HubhS/o0hXZxMh73CrxeJfu2AaBdmgNV3+x/A+FtOre6O9MWHa6mEpNR4qb0X2Ei95c9ZYEeUY0+bqS3VgGA9GzY3UTTu43NWMQmT2RDwU1sS8OxGpb9VE7cOSAEA49y+Vex4JfvEANlymT7he3YXCyZEJmAEAonTVqZ1qxBSI91OS0oDB2z2FG4VzDCJ0ca7tqCa0vIEgVNqYi/P5ao4uZoTY6i6rn8Ii4ch7a2kqjXGEg3rk/YrdjQV57W573/X4UIUGH5xwp3TVLE8+GOU7DO7dOhGnSqo9OAIxbOuKabjNXxaDjNdBr2SBdu5CEyYSidJ deploy"
+
+# INSTALL DEPS
+    - name: Install chrony
+      apt:
+        name: chrony
+        state: present
+
+    - name: Install htop
+      apt:
+        name: htop
+        state: present
+
+    - name: Install Vim
+      apt:
+        name: vim
+        state: present
+
+    - import_role:
+        name: geerlingguy.docker
+      vars:
+        docker_compose_version: "2.29.6"
+        docker_users:
+        - ted
+        - deploy
